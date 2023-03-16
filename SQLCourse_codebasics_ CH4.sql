@@ -115,7 +115,8 @@ select a.name,group_concat( m.title separator ' | '  ) as movies, count(m.title)
 from actors a join movie_actor ma on a.actor_id =  ma.actor_id
  join movies m on m.movie_id = ma.movie_id group by a.actor_id order by movie_count desc;
  
--- Exercise 
+/* Exercise  Generate a report of all Hindi movies sorted by their revenue amount in millions. 
+Print movie name, revenue, currency, and unit */
 -- movie.title| revenue in financials | financials.currency fin.unit
 select * from movies;
 select * from financials; 
