@@ -103,3 +103,24 @@ join (
 with x as (select *, (revenue-budget)*100/budget as pct_profit from financials) ,
 	 y as (select * from movies where imdb_rating < (select avg(imdb_rating) as avg_rating from movies))
 	select x.movie_id, x.pct_profit,y.title, y.imdb_rating from x join y using(movie_id) where pct_profit >= 500;
+/*
+CTE makes query readability more easy compared to adding more where clause 
+you can use x-subquery into y-subquery so no need to repeat the statement again (Reusability)
+visibility for creating data views  */
+
+/* Que - select all hollowood movies released after year 2000 that made more than 500 millions $ 
+profit or more profit. Note that all hollywood movies have millions as a unit hence you don't
+need to do unit converstion. Also you can write this query without CTE as well but you should
+try to write this using CTE only */
+
+select * from movies join financials using(movie_id) where industry="Hollywood" and (revenue-budget) >=500 and release_year>2000;
+with x as (select movie_id,title,release_year from movies where industry="Hollywood"),
+	y as (select movie_id,(revenue-budget) as profit from financials )
+select title,profit from x join y using(movie_id) where profit>500 and release_year>2000;
+-- below is solution and above is your work
+with cte as (select title, release_year, (revenue-budget) as profit
+			from movies m
+			join financials f
+			on m.movie_id=f.movie_id	
+			where release_year>2000 and industry="hollywood"
+	)select * from cte where profit>500
