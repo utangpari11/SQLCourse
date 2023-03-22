@@ -21,33 +21,28 @@ select * from fact_sales_monthly where customer_code=90002002
 	and get_fiscal_year(date)=2021 order by date desc;
     
 /*The above question with criteria of FY=2021 and Quarter=4 ,, We will do it by create a new functionget_fiscal_yearget_fiscal_year*/
-select * from fact_sales_montget_fiscal_yearget_fiscal_yearhly where customer_code = 90002002 and get_fiscal_year(date)=2021 and get_fiscal_quarter(date)="Q2" order by date desc;
+select * from fact_sales_monthly where customer_code = 90002002 and get_fiscal_year(date)=2021 and get_fiscal_quarter(date)="Q2" order by date desc;
 select *,get_fiscal_quarter(date) as tmn from fact_sales_monthly where customer_code = 90002002 and get_fiscal_year(date)=2021 having tmn="Q2" order by date desc;
+ 
+-- Now for the main question on top of page, we need product and variant column from the dim_product table;
+select s.date,s.product_code, p.product, p.variant, s.sold_quantity from fact_sales_monthly s join dim_product p using(product_code) 
+where customer_code = 90002002 and get_fiscal_year(date)=2021 order by date asc limit 1000000;
 
-/*
-CREATE DEFINER=`root`@`localhost` FUNCTION `get_fiscal_year`( calendar_date date 
-) RETURNS int
-    DETERMINISTIC
-BEGIN
-	DECLARE fiscal_year INT;
-    SET fiscal_year = YEAR(date_add(calendar_date,interval 4 month));
-RETURN fiscal_year;
-END
-----------------------------
- CREATE DEFINER=`root`@`localhost` FUNCTION `get_fiscal_quarter`(calender_date date) RETURNS char(2) CHARSET latin1
-    DETERMINISTIC
-BEGIN
-	DECLARE mn tinyint;
-    DECLARE qtr char(2);
-    SET mn = MONTH(calender_date);
-    case 
-		when mn IN (1,2,3) then SET qtr="Q1";
-		when mn IN (4,5,6) then SET qtr="Q2";
-		when mn IN (7,8,9) then SET qtr="Q3";
-	else 
-		 SET qtr="Q4";
-	end case;
-RETURN qtr;
-END */ 
-
-
+-- Now for the main question on top of page, we need Gross price per item , gross_price from fact_gross_price;
+-- we have only gross_price from that table, have to calculate per item
+select * from fact_gross_price where product_code="A0118150101"; 
+-- try this and see every diff fiscal year the price for one product is differen so use 2 parameter for join - producr_code and fiscal_year
+select s.date,s.product_code, p.product, p.variant, s.sold_quantity , g.gross_price
+	from 
+		fact_sales_monthly s join dim_product p using(product_code) 
+		join fact_gross_price g 
+			on g.product_code = s.product_code and g.fiscal_year=get_fiscal_year(s.date)
+where customer_code = 90002002 and get_fiscal_year(date)=2021 order by date asc limit 1000000;  
+-- We got gross_price now try gross_price_total
+select s.date,s.product_code, p.product, p.variant, s.sold_quantity , g.gross_price,
+	ROUND(g.gross_price*s.sold_quantity,2) as gross_price_total
+	from 
+		fact_sales_monthly s join dim_product p using(product_code) 
+		join fact_gross_price g 
+			on g.product_code = s.product_code and g.fiscal_year=get_fiscal_year(s.date)
+where customer_code = 90002002 and get_fiscal_year(date)=2021 order by date asc limit 1000000;  
