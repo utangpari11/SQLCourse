@@ -46,3 +46,29 @@ select s.date,s.product_code, p.product, p.variant, s.sold_quantity , g.gross_pr
 		join fact_gross_price g 
 			on g.product_code = s.product_code and g.fiscal_year=get_fiscal_year(s.date)
 where customer_code = 90002002 and get_fiscal_year(date)=2021 order by date asc limit 1000000;  
+
+-- So this is final result which manager wants, export the result into the CSV
+-- Now modify it into the Excel or create dashboard in power BI 
+
+-- Croma's transactions sorted by date
+select * from fact_sales_monthly s join fact_gross_price g on 
+	g.product_code = s.product_code and 
+    g.fiscal_year = get_fiscal_year(s.date)
+where customer_code = 90002002
+order by s.date asc;
+-- in above result, there are multiple row with same date, we need single row with a month
+select s.date , SUM(g.gross_price * s.sold_quantity) as gross_price_total 
+from fact_sales_monthly s join fact_gross_price g on 
+	g.product_code = s.product_code and 
+    g.fiscal_year = get_fiscal_year(s.date)
+	where customer_code = 90002002
+    group by s.date order by s.date asc ; 
+    
+/*Exc - Generate a yearly report for Croma India where there are two columns, Fiscal Year, Total Gross Sales amount In that year from Croma */
+select * from dim_customer; -- For Croma - "90002002" customer_code
+select get_fiscal_year(s.date) as fy, ROUND(SUM(g.gross_price*s.sold_quantity),2)
+from fact_sales_monthly s join fact_gross_price g on s.product_code = g.product_code and get_fiscal_year(s.date) = g.fiscal_year 
+where customer_code = 90002002 group by fy;
+-- Convert this into a stored procedure 
+-- It will be easy just to input a customer_code
+call gdb041.get_monthly_gross_sales_for_customer(90002002); -- To call the procedure
