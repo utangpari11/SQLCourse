@@ -72,3 +72,12 @@ where customer_code = 90002002 group by fy;
 -- Convert this into a stored procedure 
 -- It will be easy just to input a customer_code
 call gdb041.get_monthly_gross_sales_for_customer(90002002); -- To call the procedure
+
+/* create a stored procedure that can determine  the market badge based on -
+if total sold quantity > 5 million that market is considered GOLD else it is silver
+Inpu - Market, fiscal year*/
+select * from fact_sales_monthly; -- sold quantity and customer code 
+select * from dim_customer; -- customer code belong to one market, 70002017 & 70002018 belong to INDIA.
+select market, 
+	SUM(sold_quantity) from fact_sales_monthly s join dim_customer c using (customer_code) 
+	where get_fiscal_year(s.date)=2021 and c.market="India" group by market ;
